@@ -1,11 +1,17 @@
 package RomanNumerals$Test
 
+import scala.language.postfixOps
 import RomanNumerals._
+import RomanNumerals.RomanNumeral._
 import org.scalatest._
 
 object RomanNumeralTestHelper {
 	implicit class IntToRomanNumeralComparison(private val value: Int) extends AnyVal {
 		def isRepresentedBy(romanNumeral: String) = (RomanNumeral from value) == romanNumeral
+	}
+
+	implicit class RomanNumeralToIntComparison(private val romanNumeral: String) extends AnyVal {
+		def represents(value: Int) = (romanNumeral toArabic) == value
 	}
 }
 import RomanNumeralTestHelper._
@@ -21,7 +27,8 @@ class RomanNumeral$Test extends FlatSpec {
 		}
 	}
 
-	it must "give roman numeral representations of all the atomic roman numeral values (e.g. 1, 5, 10, etc.)" in {
+	it must "give roman numeral representations of all the atomic roman numeral arabic values (e.g. 1, 5, 10, etc.)"  in
+	{
 		assert(1 isRepresentedBy "I")
 		assert(5 isRepresentedBy "V")
 		assert(10 isRepresentedBy "X")
@@ -44,5 +51,59 @@ class RomanNumeral$Test extends FlatSpec {
 		assert(9 isRepresentedBy "IX")
 		assert(14 isRepresentedBy "XIV")
 		assert(999 isRepresentedBy "CMXCIX")
+	}
+
+	it should "throw an IllegalArgumentException when the arabic representation of an empty roman numeral is " +
+			  "requested" in {
+		intercept[IllegalArgumentException] {
+			"" represents -1
+		}
+	}
+
+	it should "throw an IllegalArgumentException when the arabic representation of an roman numeral containing " +
+	          "invalid characters is requested" in {
+		intercept[IllegalArgumentException]{
+			"Z" represents -1
+		}
+		intercept[IllegalArgumentException]{
+			"MDCLXVIZ" represents -1
+		}
+	}
+
+	it should "throw an IllegalArgumentException when the arabic representation of a roman numeral containing " +
+	          "invalid sequences is requested" in {
+		intercept[IllegalArgumentException] {
+			"IIII" represents 4
+		}
+
+		intercept[IllegalArgumentException]{
+			"MCDC" represents 1500
+		}
+	}
+
+
+	it must "give arabic values of all the atomic roman numerals (e.g. I, V, X, etc.)" in {
+		assert("I" represents 1)
+		assert("V" represents 5)
+		assert("X" represents 10)
+		assert("L" represents 50)
+		assert("C" represents 100)
+		assert("D" represents 500)
+		assert("M" represents 1000)
+	}
+
+	it must "give arabic values for purely additive roman numerals (e.g. II, III, VI, VII, etc.)" in {
+		assert("II" represents 2)
+		assert("III" represents 3)
+		assert("VI" represents 6)
+		assert("MDCLXVI" represents 1666)
+	}
+
+	it must "give arabic values for roman numerals containing subtractive  components" +
+			"(e.g. IV, IX, XIV, XIX, XL, etc.)" in {
+		assert("IV" represents 4)
+		assert("IX" represents 9)
+		assert("XIV" represents 14)
+		assert("CMXCIX" represents 999)
 	}
 }
